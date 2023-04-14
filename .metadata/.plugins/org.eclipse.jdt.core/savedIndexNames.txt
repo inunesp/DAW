@@ -1,0 +1,5 @@
+INDEX VERSION 1.132+C:\Herramientas\Robocode\.metadata\.plugins\org.eclipse.jdt.core
+1302706435.index
+1640289366.index
+3080245753.index
+1865797976.index

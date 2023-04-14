@@ -1,0 +1,51 @@
+package com.nttdata.robocode;
+
+
+import robocode.*;
+import robocode.util.Utils;
+
+public class RobotCirculoDeFuego extends AdvancedRobot {
+    private int direction = 1;
+
+    public void run() {
+        setAdjustRadarForRobotTurn(true);
+        setAdjustGunForRobotTurn(true);
+
+        while (true) {
+            setTurnRadarRight(360);
+            execute();
+        }
+    }
+
+    public void onScannedRobot(ScannedRobotEvent e) {
+        double angleToEnemy = getHeadingRadians() + e.getBearingRadians();
+        setTurnGunRightRadians(Utils.normalRelativeAngle(angleToEnemy - getGunHeadingRadians()));
+
+        double distance = e.getDistance();
+        double bulletPower = Math.min(3.0, getEnergy());
+        double bulletSpeed = Rules.getBulletSpeed(bulletPower);
+
+        double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
+        double orbitDistance = distance / 2;
+        double orbitAngle = Math.asin(8 / orbitDistance);
+        double turnAngle = absoluteBearing + (direction * orbitAngle);
+
+        setTurnRightRadians(Utils.normalRelativeAngle(turnAngle - getHeadingRadians()));
+        setAhead(distance);
+        setFire(bulletPower);
+        scanning = true;
+        execute();
+    }
+
+    public void onHitWall(HitWallEvent e) {
+        direction = -direction;
+        setAhead(100);
+        execute();
+    }
+
+    public void onHitRobot(HitRobotEvent e) {
+        direction = -direction;
+        setAhead(50);
+        execute();
+    }
+}

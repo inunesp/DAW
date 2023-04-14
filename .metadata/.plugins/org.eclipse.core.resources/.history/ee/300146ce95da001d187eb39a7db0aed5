@@ -1,0 +1,64 @@
+package com.nttdata.robocode;
+
+
+import java.awt.geom.Point2D;
+
+import robocode.*;
+import robocode.util.Utils;
+
+public class RobotDisparoGuiado extends AdvancedRobot {
+    private double enemyX;
+    private double enemyY;
+    private double enemyVelocity;
+    private double enemyBearing;
+    private double enemyDistance;
+
+    public void run() {
+        setAdjustRadarForRobotTurn(true);
+        setAdjustGunForRobotTurn(true);
+
+        while (true) {
+            setTurnRadarRight(360);
+            execute();
+        }
+    }
+
+    public void onScannedRobot(ScannedRobotEvent e) {
+        enemyBearing = e.getBearingRadians();
+        enemyDistance = e.getDistance();
+        enemyVelocity = e.getVelocity();
+
+        double absBearing = getHeadingRadians() + enemyBearing;
+
+        enemyX = getX() + Math.sin(absBearing) * enemyDistance;
+        enemyY = getY() + Math.cos(absBearing) * enemyDistance;
+
+        double bulletPower = Math.min(3.0, getEnergy());
+        double bulletSpeed = Rules.getBulletSpeed(bulletPower);
+
+        double deltaTime = 0;
+        double predictedX = enemyX;
+        double predictedY = enemyY;
+        while((++deltaTime) * bulletSpeed <  Point2D.Double.distance(getX(), getY(), predictedX, predictedY)) {
+            predictedX += Math.sin(enemyBearing) * enemyVelocity;
+            predictedY += Math.cos(enemyBearing) * enemyVelocity;
+        }
+
+        double angleToTarget = Utils.normalAbsoluteAngle(Math.atan2(predictedX - getX(), predictedY - getY()));
+        setTurnGunRightRadians(Utils.normalRelativeAngle(angleToTarget - getGunHeadingRadians()));
+        setFire(bulletPower);
+        scanning = true;
+        execute();
+    }
+
+    public void onHitWall(HitWallEvent e) {
+        setTurnRight(90);
+        setAhead(50);
+        execute();
+    }
+
+    public void onHitRobot(HitRobotEvent e) {
+        setBack(100);
+        execute();
+    }
+}

@@ -1,0 +1,60 @@
+package com.nttdata.robocode;
+
+import robocode.*;
+import java.awt.Color;
+import robocode.util.Utils;
+
+public class TeamAlmudeyne extends AdvancedRobot {
+    private boolean scanning = true;
+
+    public void run() {
+    	
+		setColors(Color.WHITE, Color.red, Color.WHITE, Color.red, Color.WHITE);
+
+        setAdjustRadarForRobotTurn(true);
+        setAdjustGunForRobotTurn(true);
+
+        while (true) {
+            if (scanning) {
+                setTurnRadarRight(360);
+                execute();
+            } else {
+                setTurnRadarRight(getRadarTurnRemaining());
+                execute();
+            }
+        }
+    }
+
+    public void onScannedRobot(ScannedRobotEvent e) {
+        scanning = false;
+        double angleToEnemy = getHeadingRadians() + e.getBearingRadians();
+        setTurnGunRightRadians(Utils.normalRelativeAngle(angleToEnemy - getGunHeadingRadians()));
+
+        double distance = e.getDistance();
+        if (distance < 200) {
+            setFire(3);
+        } else if (distance < 400) {
+            setFire(2);
+        } else if (distance < 600) {
+            setFire(1);
+        }
+
+        setTurnRightRadians(Utils.normalRelativeAngle(angleToEnemy - getHeadingRadians() + e.getVelocity() * Math.sin(e.getHeadingRadians() - angleToEnemy) / Rules.getBulletSpeed(distance)));
+        setAhead(distance / 2);
+        scanning = true;
+        execute();
+    }
+
+    public void onHitRobot(HitRobotEvent e) {
+        back(50);
+        scanning = true;
+        execute();
+    }
+
+    public void onHitWall(HitWallEvent e) {
+        setTurnLeft(90 - e.getBearing());
+        setAhead(100);
+        scanning = true;
+        execute();
+    }
+}
